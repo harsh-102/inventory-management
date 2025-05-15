@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Inventory Management System</h1>
+            <nav>
+                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+                <button class="nav-btn" data-section="suppliers">Suppliers</button>
+                <button class="nav-btn" data-section="products">Products</button>
+                <button class="nav-btn" data-section="orders">Orders</button>
+                <button class="nav-btn" data-section="shipments">Shipments</button>
+                <button class="nav-btn" data-section="low-stock">Low Stock</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <h2>Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <h3>Shipments</h3>
+                        <p id="total-shipments">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Orders</h3>
+                        <p id="active-orders">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Suppliers</h3>
+                        <p id="total-suppliers">0</p>
+                    </div>
+                    <div class="dashboard-card">
+                        <h3>Total Products</h3>
+                        <p id="total-products">0</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>Today's Shipments</h3>
+                    <div class="table-container">
+                        <table id="today-shipments-table">
+                            <thead>
+                                <tr>
+                                    <th>Shipment ID</th>
+                                    <th>Date</th>
+                                    <th>Order ID</th>
+                                    <th>Product</th>
+                                    <th>Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="dashboard-section">
+                    <h3>Low Stock Products</h3>
+                    <div class="table-container">
+                        <table id="low-stock-dashboard-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Available</th>
+                                    <th>Minimum</th>
+                                    <th>Supplier</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Suppliers Section -->
+            <section id="suppliers" class="section">
+                <h2>Manage Suppliers</h2>
+                <button class="add-btn" id="add-supplier-btn">Add New Supplier</button>
+                <div class="form-container" id="supplier-form" style="display: none;">
+                    <h3>Add Supplier</h3>
+                    <form id="supplier-form-data">
+                        <input type="text" name="name" placeholder="Supplier Name" required>
+                        <textarea name="address" placeholder="Address" required></textarea>
+                        <input type="text" name="contact_person" placeholder="Contact Person">
+                        <input type="text" name="phone_number" placeholder="Phone Number">
+                        <input type="email" name="email" placeholder="Email">
+                        <button type="submit">Save Supplier</button>
+                    </form>
+                </div>
+                <div class="table-container">
+                    <table id="suppliers-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Contact Person</th>
+                                <th>Phone</th>
+                                <th>Email</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products" class="section">
+                <h2>Manage Products</h2>
+                <button class="add-btn" id="add-product-btn">Add New Product</button>
+                <div class="form-container" id="product-form" style="display: none;">
+                    <h3>Add Product</h3>
+                    <form id="product-form-data">
+                        <input type="text" name="name" placeholder="Product Name" required>
+                        <textarea name="description" placeholder="Description"></textarea>
+                        <input type="number" name="unit_price" placeholder="Unit Price" step="0.01" required>
+                        <input type="number" name="quantity_available" placeholder="Quantity Available" required>
+                        <input type="number" name="minimum_quantity" placeholder="Minimum Quantity Required" required>
+                        <select name="supplier_id" required>
+                            <option value="">Select Supplier</option>
+                        </select>
+                        <button type="submit">Save Product</button>
+                    </form>
+                </div>
+                
+                <div class="form-container" id="update-quantity-form" style="display: none;">
+                    <h3>Update Product Quantity</h3>
+                    <form id="quantity-form-data">
+                        <input type="hidden" name="product_id">
+                        <input type="number" name="new_quantity" placeholder="New Quantity" required>
+                        <button type="submit">Update Quantity</button>
+                    </form>
+                </div>
+                
+                <div class="table-container">
+                    <table id="products-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Price</th>
+                                <th>Available</th>
+                                <th>Min Qty</th>
+                                <th>Supplier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="section">
+                <h2>Orders</h2>
+                <div class="info-box">
+                    <p>Orders are automatically created when product quantity falls below minimum quantity.</p>
+                </div>
+                <div class="table-container">
+                    <table id="orders-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Supplier</th>
+                                <th>Date</th>
+                                <th>Items</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <div class="modal" id="order-details-modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Order Details</h3>
+                        <div class="table-container">
+                            <table id="order-items-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shipments Section -->
+            <section id="shipments" class="section">
+                <h2>Shipments</h2>
+                <div class="info-box">
+                    <p>Shipments are automatically created when multiple orders are placed on the same day.</p>
+                </div>
+                <div class="table-container">
+                    <table id="shipments-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Shipment Date</th>
+                                <th>Estimated Arrival</th>
+                                <th>Orders</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                
+                <div class="modal" id="shipment-details-modal">
+                    <div class="modal-content">
+                        <span class="close">&times;</span>
+                        <h3>Shipment Orders</h3>
+                        <div class="table-container">
+                            <table id="shipment-orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Supplier</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Low Stock Section -->
+            <section id="low-stock" class="section">
+                <h2>Low Stock Products</h2>
+                <div class="info-box">
+                    <p>Products below minimum quantity are automatically ordered.</p>
+                </div>
+                <div class="table-container">
+                    <table id="low-stock-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Quantity Available</th>
+                                <th>Minimum Quantity</th>
+                                <th>Supplier</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

@@ -1,0 +1,53 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+
+# macOS system files
+.DS_Store
+
+# Environment variables and secrets
+.env
+
+# Git folder (just in case)
+.git/
+
+# Database files (if any local ones are generated)
+*.sqlite3
+*.db
+
+# Log files
+*.log
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Python egg and distribution
+*.egg
+*.egg-info/
+dist/
+build/
+
+# PyInstaller
+*.spec
+
+# Test/report files
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# Node modules (in case JS dependencies are added later)
+node_modules/
+
+# Setup script artifacts
+setup_database.sql
+
+# Optional: ignore setup instructions if they’re temporary
+SETUP.md
