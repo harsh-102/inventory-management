@@ -328,4 +328,34 @@ tr:hover {
         width: 95%;
         margin: 5% auto;
     }
+}
+
+.user-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: var(--white);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logout-btn {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: var(--white);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Helper to hide elements */
+.hidden {
+    display: none !important;
 } 

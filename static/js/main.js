@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // Get current user ID
+    const userData = document.getElementById('user-data');
+    const currentUserId = userData ? parseInt(userData.dataset.userId) : null;
+    
     // Navigation
     const navButtons = document.querySelectorAll('.nav-btn');
     const sections = document.querySelectorAll('.section');

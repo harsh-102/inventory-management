@@ -1,116 +1,102 @@
-# Inventory Management System
+# Multi-User Inventory Management System
 
-A professional inventory management system built with Flask, MySQL, and modern frontend technologies.
+This is a web-based inventory management system that supports multiple users. Each user can manage their own suppliers, products, orders, and shipments.
 
 ## Features
 
-- Dashboard with key metrics
+- User registration and authentication
+- Dashboard showing key metrics
 - Supplier management
-- Product management
-- Order management
-- Shipment tracking
-- Modern, responsive UI
-- Real-time data updates
+- Product inventory management
+- Automatic order creation when products fall below minimum quantity
+- Automatic shipment creation when multiple orders are placed on the same day
+- Low stock alerts
 
-## Prerequisites
+## Setup Instructions
 
-- Python 3.8 or higher
-- MySQL Server
+### Prerequisites
+
+- Python 3.8+
+- MySQL 8.0+
 - pip (Python package manager)
 
-## Installation
+### Installation
 
 1. Clone the repository:
-```bash
-git clone <repository-url>
-cd inventory-management
-```
+   ```
+   git clone <repository-url>
+   cd inventory-management
+   ```
 
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+2. Create a virtual environment and activate it:
+   ```
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
+3. Install the required packages:
+   ```
+   pip install -r requirements.txt
+   ```
 
-4. Set up the MySQL database:
-```sql
-CREATE DATABASE Inventory_Management;
-```
+4. Create a `.env` file in the project root and add your database credentials:
+   ```
+   DB_USER=your_mysql_username
+   DB_PASSWORD=your_mysql_password
+   DB_HOST=localhost
+   DB_NAME=Inventory_Management
+   SECRET_KEY=your_secret_key_for_sessions
+   ```
 
-5. Update the database configuration in `app.py` if needed:
-```python
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://username:password@localhost/Inventory_Management'
-```
+5. Set up the database:
+   - Create a MySQL database named `Inventory_Management`
+   - Import the database schema:
+     ```
+     mysql -u your_username -p Inventory_Management < setup_database.sql
+     ```
 
-## Running the Application
+6. Start the application:
+   ```
+   python app.py
+   ```
 
-1. Start the Flask server:
-```bash
-python app.py
-```
+7. Open a web browser and navigate to:
+   ```
+   http://localhost:5000
+   ```
 
-2. Open your web browser and navigate to:
-```
-http://localhost:5000
-```
+8. Register a new account to start using the system
 
-## Project Structure
+## Deployment Options
 
-```
-inventory-management/
-├── app.py              # Flask application
-├── requirements.txt    # Python dependencies
-├── static/
-│   ├── css/
-│   │   └── style.css  # Stylesheet
-│   └── js/
-│       └── main.js    # Frontend JavaScript
-├── templates/
-│   └── index.html     # Main HTML template
-└── README.md          # This file
-```
+### Option 1: Deploy to PythonAnywhere
 
-## Usage
+1. Sign up for a [PythonAnywhere](https://www.pythonanywhere.com/) account
+2. Upload your code to PythonAnywhere
+3. Create a MySQL database
+4. Update your `.env` file with the PythonAnywhere database credentials
+5. Set up a web app using Flask
 
-1. **Dashboard**
-   - View key metrics and statistics
-   - Quick overview of inventory status
+### Option 2: Deploy to Heroku
 
-2. **Suppliers**
-   - Add new suppliers
-   - View and manage supplier information
-   - Delete suppliers
+1. Create a `Procfile` with the content:
+   ```
+   web: gunicorn app:app
+   ```
+2. Add `gunicorn` to your requirements.txt
+3. Sign up for [Heroku](https://www.heroku.com/)
+4. Create a Heroku app
+5. Provision a MySQL add-on or use an external MySQL database
+6. Set your environment variables in Heroku
+7. Deploy your application:
+   ```
+   git push heroku main
+   ```
 
-3. **Products**
-   - Add new products
-   - View and manage product details
-   - Track product quantities
-   - Delete products
+## Default Admin Account
 
-4. **Orders**
-   - Create new orders
-   - Add multiple products to orders
-   - View order history
-   - Delete orders
-
-5. **Shipments**
-   - Track shipments
-   - Update shipment status
-   - View delivery estimates
-   - Delete shipments
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- Username: admin
+- Password: admin123
 
 ## License
 
