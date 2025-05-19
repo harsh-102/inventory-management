@@ -1,35 +1,18 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
+from flask import Flask, render_template, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, date
 import os
 from dotenv import load_dotenv
 from sqlalchemy import text
-from werkzeug.security import generate_password_hash, check_password_hash
-import functools
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{os.getenv("DB_USER")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}/{os.getenv("DB_NAME")}'
+app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{os.getenv("DB_USER")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY") or 'this-is-a-secret-key'
-
 db = SQLAlchemy(app)
 
 # Database Models
-class User(db.Model):
-    __tablename__ = 'User'
-    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(50), nullable=False, unique=True)
-    password_hash = db.Column(db.String(255), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    company_name = db.Column(db.String(100))
-    created_at = db.Column(db.TIMESTAMP, default=datetime.utcnow)
-    suppliers = db.relationship('Supplier', backref='user', lazy=True)
-    products = db.relationship('Product', backref='user', lazy=True)
-    orders = db.relationship('Order', backref='user', lazy=True)
-    shipments = db.relationship('Shipment', backref='user', lazy=True)
-
 class Supplier(db.Model):
     __tablename__ = 'Supplier'
     supplier_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -38,7 +21,6 @@ class Supplier(db.Model):
     contact_person = db.Column(db.String(255))
     phone_number = db.Column(db.String(20))
     email = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
     products = db.relationship('Product', backref='supplier', lazy=True)
     orders = db.relationship('Order', backref='supplier', lazy=True)
 
@@ -51,7 +33,6 @@ class Product(db.Model):
     quantity_available = db.Column(db.Integer, nullable=False)
     minimum_quantity = db.Column(db.Integer, nullable=False)
     supplier_id = db.Column(db.Integer, db.ForeignKey('Supplier.supplier_id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
     order_items = db.relationship('OrderItem', backref='product', lazy=True)
 
 class Order(db.Model):
@@ -59,7 +40,6 @@ class Order(db.Model):
     order_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     supplier_id = db.Column(db.Integer, db.ForeignKey('Supplier.supplier_id'), nullable=False)
     order_date = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
     order_items = db.relationship('OrderItem', backref='order', lazy=True)
     shipments = db.relationship('ShipmentOrder', backref='order', lazy=True)
 
@@ -75,7 +55,6 @@ class Shipment(db.Model):
     shipment_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     shipment_date = db.Column(db.Date, nullable=False)
     estimated_arrival_date = db.Column(db.Date, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('User.user_id'), nullable=False)
     orders = db.relationship('ShipmentOrder', backref='shipment', lazy=True)
 
 class ShipmentOrder(db.Model):
@@ -83,105 +62,13 @@ class ShipmentOrder(db.Model):
     shipment_id = db.Column(db.Integer, db.ForeignKey('Shipment.shipment_id'), primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('Order.order_id'), primary_key=True)
 
-# Authentication helper functions
-def login_required(view):
-    @functools.wraps(view)
-    def wrapped_view(**kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
-        return view(**kwargs)
-    return wrapped_view
-
-def get_current_user():
-    if 'user_id' in session:
-        return User.query.get(session['user_id'])
-    return None
-
-# Authentication Routes
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-        
-    error = None
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        user = User.query.filter_by(username=username).first()
-        
-        if user is None:
-            error = 'Invalid username or password'
-        elif not check_password_hash(user.password_hash, password):
-            error = 'Invalid username or password'
-        else:
-            session.clear()
-            session['user_id'] = user.user_id
-            return redirect(url_for('index'))
-    
-    return render_template('login.html', error=error)
-
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    if 'user_id' in session:
-        return redirect(url_for('index'))
-        
-    error = None
-    if request.method == 'POST':
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        company_name = request.form['company_name']
-        
-        if not username or not email or not password:
-            error = 'All fields are required'
-        elif password != confirm_password:
-            error = 'Passwords do not match'
-        elif User.query.filter_by(username=username).first() is not None:
-            error = 'Username already exists'
-        elif User.query.filter_by(email=email).first() is not None:
-            error = 'Email already registered'
-        else:
-            try:
-                # Use the stored procedure to register user
-                hashed_password = generate_password_hash(password)
-                query = text("CALL RegisterUser(:username, :password, :email, :company)")
-                db.session.execute(query, {
-                    'username': username,
-                    'password': hashed_password,
-                    'email': email,
-                    'company': company_name
-                })
-                db.session.commit()
-                
-                # Log the user in
-                user = User.query.filter_by(username=username).first()
-                session['user_id'] = user.user_id
-                
-                return redirect(url_for('index'))
-            except Exception as e:
-                error = f"An error occurred: {str(e)}"
-    
-    return render_template('register.html', error=error)
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
-
 # Routes
 @app.route('/')
-@login_required
 def index():
-    current_user = get_current_user()
-    return render_template('index.html', current_user=current_user)
+    return render_template('index.html')
 
 @app.route('/api/suppliers', methods=['GET', 'POST'])
-@login_required
 def handle_suppliers():
-    current_user = get_current_user()
-    
     if request.method == 'POST':
         data = request.json
         new_supplier = Supplier(
@@ -189,15 +76,14 @@ def handle_suppliers():
             address=data['address'],
             contact_person=data.get('contact_person', ''),
             phone_number=data.get('phone_number', ''),
-            email=data.get('email', ''),
-            user_id=current_user.user_id
+            email=data.get('email', '')
         )
         db.session.add(new_supplier)
         db.session.commit()
         return jsonify({"message": "Supplier added successfully"}), 201
     
-    suppliers = Supplier.query.filter_by(user_id=current_user.user_id).all()
-    print(f"Fetching all suppliers for user {current_user.user_id}. Found {len(suppliers)} suppliers.")
+    suppliers = Supplier.query.all()
+    print(f"Fetching all suppliers. Found {len(suppliers)} suppliers.")
     for s in suppliers:
         print(f"  Supplier: {s.supplier_id} - {s.name}")
     
@@ -211,37 +97,30 @@ def handle_suppliers():
     } for s in suppliers])
 
 @app.route('/api/suppliers/<int:supplier_id>', methods=['DELETE'])
-@login_required
 def delete_supplier(supplier_id):
-    current_user = get_current_user()
-    supplier = Supplier.query.filter_by(supplier_id=supplier_id, user_id=current_user.user_id).first_or_404()
-    
+    supplier = Supplier.query.get_or_404(supplier_id)
     db.session.delete(supplier)
     db.session.commit()
     return jsonify({"message": "Supplier deleted successfully"}), 200
 
 @app.route('/api/products', methods=['GET', 'POST'])
-@login_required
 def handle_products():
-    current_user = get_current_user()
-    
     if request.method == 'POST':
         data = request.json
         # Use stored procedure to add product
-        query = text("CALL AddProduct(:name, :description, :price, :qty, :min_qty, :supplier_id, :user_id)")
+        query = text("CALL AddProduct(:name, :description, :price, :qty, :min_qty, :supplier_id)")
         db.session.execute(query, {
             'name': data['name'],
             'description': data['description'],
             'price': data['unit_price'],
             'qty': data['quantity_available'],
             'min_qty': data['minimum_quantity'],
-            'supplier_id': data['supplier_id'],
-            'user_id': current_user.user_id
+            'supplier_id': data['supplier_id']
         })
         db.session.commit()
         return jsonify({"message": "Product added successfully"}), 201
     
-    products = Product.query.filter_by(user_id=current_user.user_id).all()
+    products = Product.query.all()
     return jsonify([{
         'product_id': p.product_id,
         'name': p.name,
@@ -253,11 +132,7 @@ def handle_products():
     } for p in products])
 
 @app.route('/api/products/<int:product_id>', methods=['DELETE'])
-@login_required
 def delete_product(product_id):
-    current_user = get_current_user()
-    product = Product.query.filter_by(product_id=product_id, user_id=current_user.user_id).first_or_404()
-    
     try:
         # Use stored procedure to delete product
         query = text("CALL DeleteProduct(:pid)")
@@ -271,14 +146,12 @@ def delete_product(product_id):
         return jsonify({"error": "Could not delete product. It may be referenced in orders or shipments."}), 400
 
 @app.route('/api/products/update_quantity', methods=['POST'])
-@login_required
 def update_product_quantity():
-    current_user = get_current_user()
     data = request.json
     print(f"Updating product {data['product_id']} quantity to {data['new_quantity']}")
     
     try:
-        product = Product.query.filter_by(product_id=data['product_id'], user_id=current_user.user_id).first_or_404()
+        product = Product.query.get_or_404(data['product_id'])
         old_quantity = product.quantity_available
         minimum_quantity = product.minimum_quantity
         
@@ -297,8 +170,7 @@ def update_product_quantity():
             today = date.today()
             new_order = Order.query.filter(
                 Order.supplier_id == product.supplier_id,
-                Order.order_date == today,
-                Order.user_id == current_user.user_id
+                Order.order_date == today
             ).first()
             
             if new_order:
@@ -313,13 +185,10 @@ def update_product_quantity():
         return jsonify({"error": str(e)}), 400
 
 @app.route('/api/orders', methods=['GET'])
-@login_required
 def get_orders():
-    current_user = get_current_user()
-    
     try:
         print("Fetching orders from database...")
-        orders = Order.query.filter_by(user_id=current_user.user_id).all()
+        orders = Order.query.all()
         print(f"Found {len(orders)} orders")
         
         result = []
@@ -348,11 +217,8 @@ def get_orders():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/shipments', methods=['GET'])
-@login_required
 def get_shipments():
-    current_user = get_current_user()
-    
-    shipments = Shipment.query.filter_by(user_id=current_user.user_id).all()
+    shipments = Shipment.query.all()
     result = []
     for shipment in shipments:
         shipment_orders = ShipmentOrder.query.filter_by(shipment_id=shipment.shipment_id).all()
@@ -367,12 +233,9 @@ def get_shipments():
     return jsonify(result)
 
 @app.route('/api/low_stock', methods=['GET'])
-@login_required
 def get_low_stock():
-    current_user = get_current_user()
-    
-    query = text("SELECT * FROM LowStockProducts WHERE user_id = :user_id")
-    result = db.session.execute(query, {'user_id': current_user.user_id})
+    query = text("SELECT * FROM LowStockProducts")
+    result = db.session.execute(query)
     low_stock = [{
         'product_id': row[0],
         'name': row[1],
@@ -383,12 +246,9 @@ def get_low_stock():
     return jsonify(low_stock)
 
 @app.route('/api/today_shipments', methods=['GET'])
-@login_required
 def get_today_shipments():
-    current_user = get_current_user()
-    
-    query = text("SELECT * FROM TodayShipments WHERE user_id = :user_id")
-    result = db.session.execute(query, {'user_id': current_user.user_id})
+    query = text("SELECT * FROM TodayShipments")
+    result = db.session.execute(query)
     shipments = [{
         'shipment_id': row[0],
         'shipment_date': row[1].strftime('%Y-%m-%d'),
@@ -399,15 +259,9 @@ def get_today_shipments():
     return jsonify(shipments)
 
 @app.route('/api/products_with_suppliers', methods=['GET'])
-@login_required
 def get_products_with_suppliers():
-    current_user = get_current_user()
-    
-    query = text("""SELECT p.*, s.name AS supplier_name 
-                 FROM Product p 
-                 JOIN Supplier s ON p.supplier_id = s.supplier_id 
-                 WHERE p.user_id = :user_id""")
-    result = db.session.execute(query, {'user_id': current_user.user_id})
+    query = text("SELECT p.*, s.name AS supplier_name FROM Product p JOIN Supplier s ON p.supplier_id = s.supplier_id")
+    result = db.session.execute(query)
     products = [{
         'product_id': row[0],
         'name': row[1],
@@ -416,7 +270,7 @@ def get_products_with_suppliers():
         'quantity_available': row[4],
         'minimum_quantity': row[5],
         'supplier_id': row[6],
-        'supplier_name': row[8]
+        'supplier_name': row[7]
     } for row in result]
     return jsonify(products)
 
