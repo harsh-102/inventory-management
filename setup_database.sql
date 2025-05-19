@@ -1,4 +1,9 @@
+-- Create and use the database
+--CREATE DATABASE IF NOT EXISTS Inventory_Management;
 
+--USE Inventory_Management;
+USE railway;
+-- User Table
 CREATE TABLE IF NOT EXISTS User (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
