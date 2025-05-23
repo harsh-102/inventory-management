@@ -1,20 +1,42 @@
-# Byte-compiled / optimized / DLL files
+# Environment variables
+.env
+.env.*
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Virtual environments
-venv/
+*.so
+.Python
 env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# macOS system files
+# Virtual Environment
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
 .DS_Store
-
-# Environment variables and secrets
-.env
-
-# Git folder (just in case)
-.git/
+Thumbs.db
 
 # Database files (if any local ones are generated)
 *.sqlite3
@@ -22,12 +44,6 @@ env/
 
 # Log files
 *.log
-
-# IDE/editor settings
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
 
 # Python egg and distribution
 *.egg
@@ -49,5 +65,5 @@ node_modules/
 # Setup script artifacts
 setup_database.sql
 
-# Optional: ignore setup instructions if they’re temporary
+# Optional: ignore setup instructions if they're temporary
 SETUP.md

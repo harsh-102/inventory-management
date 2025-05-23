@@ -13,7 +13,7 @@ app = Flask(__name__, static_folder='static', static_url_path='/static')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', '').replace('postgres://', 'postgresql://')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY") or 'this-is-a-secret-key'
-
+#postgresql://inventory_management_system_3zzu_user:15ejctgQcbqjf1ljUDAL37DktHh8lx46@dpg-d0o7cere5dus73b7k7vg-a.oregon-postgres.render.com/inventory_management_system_3zzu
 db = SQLAlchemy(app)
 
 # Database Models
