@@ -9,11 +9,11 @@ import functools
 
 load_dotenv()
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'mysql+mysqlconnector://{os.getenv("DB_USER")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}:{os.getenv("DB_PORT")}/{os.getenv("DB_NAME")}'
+app = Flask(__name__, static_folder='static', static_url_path='/static')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', '').replace('postgres://', 'postgresql://')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY") or 'this-is-a-secret-key'
-
+#postgresql://inventory_management_system_3zzu_user:15ejctgQcbqjf1ljUDAL37DktHh8lx46@dpg-d0o7cere5dus73b7k7vg-a.oregon-postgres.render.com/inventory_management_system_3zzu
 db = SQLAlchemy(app)
 
 # Database Models
@@ -144,10 +144,10 @@ def register():
             error = 'Email already registered'
         else:
             try:
-                # Use the stored procedure to register user
+                # Use the PostgreSQL function to register user
                 hashed_password = generate_password_hash(password)
-                query = text("CALL RegisterUser(:username, :password, :email, :company)")
-                db.session.execute(query, {
+                query = text("SELECT register_user(:username, :password, :email, :company)")
+                result = db.session.execute(query, {
                     'username': username,
                     'password': hashed_password,
                     'email': email,
@@ -227,9 +227,9 @@ def handle_products():
     
     if request.method == 'POST':
         data = request.json
-        # Use stored procedure to add product
-        query = text("CALL AddProduct(:name, :description, :price, :qty, :min_qty, :supplier_id, :user_id)")
-        db.session.execute(query, {
+        # Use PostgreSQL function to add product
+        query = text("SELECT add_product(:name, :description, :price, :qty, :min_qty, :supplier_id, :user_id)")
+        result = db.session.execute(query, {
             'name': data['name'],
             'description': data['description'],
             'price': data['unit_price'],
@@ -259,8 +259,8 @@ def delete_product(product_id):
     product = Product.query.filter_by(product_id=product_id, user_id=current_user.user_id).first_or_404()
     
     try:
-        # Use stored procedure to delete product
-        query = text("CALL DeleteProduct(:pid)")
+        # Use PostgreSQL function to delete product
+        query = text("SELECT delete_product(:pid)")
         db.session.execute(query, {'pid': product_id})
         db.session.commit()
         return jsonify({"message": "Product deleted successfully"}), 200
