@@ -146,7 +146,7 @@ def register():
             try:
                 # Use the PostgreSQL function to register user
                 hashed_password = generate_password_hash(password)
-                query = text("SELECT register_user(:username, :password, :email, :company)")
+                query = text("SELECT register_user(:username::VARCHAR, :password::VARCHAR, :email::VARCHAR, :company::VARCHAR)")
                 result = db.session.execute(query, {
                     'username': username,
                     'password': hashed_password,
@@ -228,7 +228,7 @@ def handle_products():
     if request.method == 'POST':
         data = request.json
         # Use PostgreSQL function to add product
-        query = text("SELECT add_product(:name, :description, :price, :qty, :min_qty, :supplier_id, :user_id)")
+        query = text("SELECT add_product(:name::VARCHAR, :description::TEXT, :price::DECIMAL, :qty::INTEGER, :min_qty::INTEGER, :supplier_id::INTEGER, :user_id::INTEGER)")
         result = db.session.execute(query, {
             'name': data['name'],
             'description': data['description'],
