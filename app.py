@@ -146,7 +146,7 @@ def register():
             try:
                 # Use the PostgreSQL function to register user
                 hashed_password = generate_password_hash(password)
-                query = text("SELECT register_user(:username::VARCHAR, :password::VARCHAR, :email::VARCHAR, :company::VARCHAR)")
+                query = text("SELECT register_user(:username, :password, :email, :company)")
                 result = db.session.execute(query, {
                     'username': username,
                     'password': hashed_password,
